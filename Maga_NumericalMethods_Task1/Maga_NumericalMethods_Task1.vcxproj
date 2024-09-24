@@ -187,6 +187,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphsDlg.h" />
     <ClInclude Include="Maga_NumericalMethods_Task1.h" />
+    <ClInclude Include="ModelDrawer.h" />
     <ClInclude Include="MyDlg.h" />
     <ClInclude Include="ParamDialog.h" />
     <ClInclude Include="pch.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="Drawer.cpp" />
     <ClCompile Include="GraphsDlg.cpp" />
     <ClCompile Include="Maga_NumericalMethods_Task1.cpp" />
+    <ClCompile Include="ModelDrawer.cpp" />
     <ClCompile Include="MyDlg.cpp" />
     <ClCompile Include="ParamDialog.cpp" />
     <ClCompile Include="pch.cpp">

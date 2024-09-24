@@ -5,7 +5,7 @@
 #pragma once
 #include"ParamDialog.h"
 #include"GraphsDlg.h"
-
+#include"ModelDrawer.h"
 // Диалоговое окно MyDlg
 class MyDlg : public CDialogEx
 {
@@ -37,4 +37,6 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedButtonParams();
 	CStatic ParamsText;
+	std::vector<GraphsDlg*>graphs;
+	ModelDrawer ModelPicture;
 };

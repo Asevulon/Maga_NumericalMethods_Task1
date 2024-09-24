@@ -31,6 +31,7 @@ public:
 // Реализация
 protected:
 	DECLARE_MESSAGE_MAP()
+	afx_msg LRESULT OnMsMyCreate(WPARAM wParam, LPARAM lParam);
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -60,6 +61,7 @@ void MyDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PARAMS_TEXT, ParamsText);
+	DDX_Control(pDX, IDC_MODEL_PICTURE, ModelPicture);
 }
 
 BEGIN_MESSAGE_MAP(MyDlg, CDialogEx)
@@ -161,8 +163,17 @@ HCURSOR MyDlg::OnQueryDragIcon()
 void MyDlg::OnBnClickedOk()
 {
 	// TODO: добавьте свой код обработчика уведомлений
-	GraphsDlg dlg;
-	dlg.DoModal();
+	GraphsDlg* dlg = new GraphsDlg;
+	double a = 3.82e-10;
+	std::vector<PointF>data;
+	data.push_back(PointF(15 * a, 15 * a));
+	ModelPicture.SetRange(PointF(0, 0), PointF(30 * a, 30 * a));
+	ModelPicture.SetData(data);
+	ModelPicture.SetPadding(10, 5, 10, 10);
+	ModelPicture.SetTitle(L"Модель");
+	ModelPicture.SetGridLinesAmount(29);
+	ModelPicture.SetMarksScaler(1. / a);
+	ModelPicture.Invalidate();
 }
 
 
@@ -176,4 +187,10 @@ void MyDlg::OnBnClickedButtonParams()
 	else str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f",
 		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0);
 	ParamsText.SetWindowTextW(str);
+}
+
+
+afx_msg LRESULT CAboutDlg::OnMsMyCreate(WPARAM wParam, LPARAM lParam)
+{
+	return 0;
 }

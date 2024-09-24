@@ -26,4 +26,9 @@ public:
 	Drawer Graph2;
 	Drawer Graph3;
 	Drawer Graph4;
+protected:
+	afx_msg LRESULT OnMyCreate(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMyShow(WPARAM wParam, LPARAM lParam);
+public:
+	virtual BOOL OnInitDialog();
 };
