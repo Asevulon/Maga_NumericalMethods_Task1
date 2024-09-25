@@ -3,6 +3,7 @@
 #include "Drawer.h"
 
 // Диалоговое окно GraphsDlg
+#define GRAPH_CLOSED WM_USER + 3
 
 class GraphsDlg : public CDialogEx
 {
@@ -31,4 +32,8 @@ protected:
 	afx_msg LRESULT OnMyShow(WPARAM wParam, LPARAM lParam);
 public:
 	virtual BOOL OnInitDialog();
+	bool NeedAcknowledge = false;
+	CWnd* AcknowledgeTarget;
+	int id = 0;
+	void InvalidateGraphs();
 };

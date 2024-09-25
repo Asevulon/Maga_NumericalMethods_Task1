@@ -40,11 +40,12 @@ void Drawer::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	Graphics gr(&bmp);
 	gr.Clear(Color::White);
 
-	if (data.empty() || keys.empty() || (data.size()!=keys.size()))
+	if (data.empty())
 	{
 		ToWindow.DrawImage(&bmp, 0, 0);
 		return;
 	}
+	if (keys.size() != data.size())AutoKeys();
 
 	gr.SetSmoothingMode(SmoothingModeAntiAlias);
 	double actWidth(right - left);
@@ -169,6 +170,12 @@ void Drawer::SetData(vector<double>& y)
 	if (data.empty())return;
 	top = *max_element(data.begin(), data.end());
 	bot = *min_element(data.begin(), data.end());
+	double dif = (top - bot) / max(fabs(top), fabs(bot));
+	if (dif < 0.05)
+	{
+		top += (top - bot) * 0.15;
+		bot -= (top - bot) * 0.15;
+	}
 }
 void Drawer::SetKeys(vector<double>& x)
 {
@@ -211,4 +218,12 @@ double Drawer::CalcStringLen(HDC hDC, CString str)
 		numlen += abc.abcfA + abc.abcfB + abc.abcfC;
 	}
 	return numlen;
+}
+
+void Drawer::AutoKeys()
+{
+	keys.resize(data.size());
+	for (int i = 0; i < keys.size(); i++)keys[i] = i;
+	left = 0; 
+	right = keys.size() - 1;
 }

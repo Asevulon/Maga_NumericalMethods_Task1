@@ -20,6 +20,7 @@ GraphsDlg::GraphsDlg(CWnd* pParent /*=nullptr*/)
 
 GraphsDlg::~GraphsDlg()
 {
+	if (NeedAcknowledge)	AcknowledgeTarget->PostMessageW(GRAPH_CLOSED, id);
 }
 
 void GraphsDlg::DoDataExchange(CDataExchange* pDX)
@@ -60,7 +61,20 @@ BOOL GraphsDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  Добавить дополнительную инициализацию
+	Graph1.SetPadding(22, 5, 10, 10);
+	Graph2.SetPadding(22, 5, 10, 10);
+	Graph3.SetPadding(22, 5, 10, 10);
+	Graph4.SetPadding(22, 5, 10, 10);
+
 	ShowWindow(SW_SHOW);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// Исключение: страница свойств OCX должна возвращать значение FALSE
+}
+
+void GraphsDlg::InvalidateGraphs()
+{
+	Graph1.Invalidate();
+	Graph2.Invalidate();
+	Graph3.Invalidate();
+	Graph4.Invalidate();
 }

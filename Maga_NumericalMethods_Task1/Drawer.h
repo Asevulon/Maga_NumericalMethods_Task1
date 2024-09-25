@@ -38,6 +38,7 @@ public:
 
 protected:
 	double CalcStringLen(HDC hDC, CString string);
+	void AutoKeys();
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual void DrawItem(LPDRAWITEMSTRUCT /*lpDrawItemStruct*/);

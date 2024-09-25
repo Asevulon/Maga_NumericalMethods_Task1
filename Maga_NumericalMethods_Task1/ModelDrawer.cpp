@@ -174,6 +174,15 @@ void ModelDrawer::SetData(std::vector<Gdiplus::PointF>y)
 	data = y;
 }
 
+void ModelDrawer::SetData(std::vector<std::pair<double, double>>y)
+{
+	data.resize(y.size());
+	for (int i = 0; i < y.size(); i++)
+	{
+		data[i] = PointF(y[i].first, y[i].second);
+	}
+}
+
 void ModelDrawer::SetRange(PointF& lb, PointF& rt)
 {
 	left = lb.X;

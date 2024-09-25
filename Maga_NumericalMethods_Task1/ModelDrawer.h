@@ -43,6 +43,7 @@ protected:
 public:
 	virtual void DrawItem(LPDRAWITEMSTRUCT /*lpDrawItemStruct*/);
 	void SetData(std::vector<Gdiplus::PointF>data);
+	void SetData(std::vector<std::pair<double, double>>data);
 	void SetRange(PointF& lb, PointF& rt);
 	//Отступ задается в процентах (диапазон значений от 0 до 100)
 	void SetPadding(double lPadding, double rPadding, double tPadding, double bPadding);

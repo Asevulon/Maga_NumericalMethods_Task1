@@ -6,6 +6,7 @@
 #include"ParamDialog.h"
 #include"GraphsDlg.h"
 #include"ModelDrawer.h"
+#include"Verlet.h"
 // Диалоговое окно MyDlg
 class MyDlg : public CDialogEx
 {
@@ -39,4 +40,14 @@ public:
 	CStatic ParamsText;
 	std::vector<GraphsDlg*>graphs;
 	ModelDrawer ModelPicture;
+	Verlet* ver;
+	static DWORD WINAPI ModelThread(LPVOID);
+	bool GraphsAvailible = false;
+	UINT_PTR timerid;
+	bool InProcess = false;
+protected:
+	afx_msg LRESULT OnGraphClosed(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CButton OkButton;
 };
