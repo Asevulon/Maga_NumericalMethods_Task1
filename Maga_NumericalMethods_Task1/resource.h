@@ -23,6 +23,8 @@
 #define IDC_MODEL_PICTURE               1009
 #define IDC_GRAPH1                      1010
 #define IDC_GRAPH2                      1011
+#define IDC_BUTTON1                     1011
+#define IDC_BUTTON_GRAPHICS             1011
 #define IDC_GRAPH3                      1012
 #define IDC_GRAPH4                      1013
 
@@ -32,7 +34,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

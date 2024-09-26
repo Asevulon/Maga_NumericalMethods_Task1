@@ -73,6 +73,8 @@ BEGIN_MESSAGE_MAP(MyDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_PARAMS, &MyDlg::OnBnClickedButtonParams)
 	ON_MESSAGE(GRAPH_CLOSED, &MyDlg::OnGraphClosed)
 	ON_WM_TIMER()
+	ON_STN_CLICKED(IDC_PARAMS_TEXT, &MyDlg::OnStnClickedParamsText)
+	ON_BN_CLICKED(IDC_BUTTON_GRAPHICS, &MyDlg::OnBnClickedButtonGraphics)
 END_MESSAGE_MAP()
 
 
@@ -175,18 +177,14 @@ void MyDlg::OnBnClickedOk()
 	}
 	else
 	{
-		GraphsDlg* dlg = new GraphsDlg;
-		dlg->id = graphs.size();
-		dlg->NeedAcknowledge = true;
-		dlg->AcknowledgeTarget = this;
-		graphs.push_back(dlg);
-		GraphsAvailible = true;
+		CreateGraphs();
 
 		ver = new Verlet();
 		ver->SetC(pardlg.shift);
 		ver->SetL(pardlg.L);
 		ver->SetVacancy(pardlg.vacancy);
 		ver->SetDt(pardlg.dt);
+		ver->SetDr(pardlg.dr);
 		ver->CreateStartPosition();
 
 		double a = ver->GetA();
@@ -207,7 +205,7 @@ void MyDlg::OnBnClickedOk()
 		ParamsText.SetWindowTextW(actstr + str);*/
 		UpdateString();
 
-		timerid = SetTimer(123, 16, NULL);
+		timerid = SetTimer(123, 32, NULL);
 
 		OkButton.SetWindowTextW(L"Стоп");
 		InProcess = true;
@@ -268,6 +266,15 @@ void MyDlg::UpdateString()
 
 	ParamsText.SetWindowTextW(str);
 }
+void MyDlg::CreateGraphs()
+{
+	GraphsDlg* dlg = new GraphsDlg;
+	dlg->id = graphs.size();
+	dlg->NeedAcknowledge = true;
+	dlg->AcknowledgeTarget = this;
+	graphs.push_back(dlg);
+	GraphsAvailible = true;
+}
 afx_msg LRESULT MyDlg::OnGraphClosed(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == graphs.size() - 1);
@@ -281,11 +288,12 @@ void MyDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO: добавьте свой код обработчика сообщений или вызов стандартного
 	if (GraphsAvailible)
 	{
-		if(rdrw%35 == 0)
+		if(rdrw%18 == 0)
 		{
 			graphs.back()->Graph1.SetData(ver->GetE());
 			graphs.back()->Graph2.SetData(ver->GetEk());
 			graphs.back()->Graph3.SetData(ver->GetEp());
+			graphs.back()->Graph4.SetData(ver->GetG());
 
 			//graphs.back()->Invalidate();
 			graphs.back()->InvalidateGraphs();
@@ -297,4 +305,17 @@ void MyDlg::OnTimer(UINT_PTR nIDEvent)
 	ModelPicture.Invalidate();
 	rdrw++;
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void MyDlg::OnStnClickedParamsText()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void MyDlg::OnBnClickedButtonGraphics()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+	CreateGraphs();
 }

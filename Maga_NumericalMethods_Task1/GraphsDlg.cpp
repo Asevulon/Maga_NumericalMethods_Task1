@@ -61,13 +61,14 @@ BOOL GraphsDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  Добавить дополнительную инициализацию
-	Graph1.SetPadding(22, 5, 10, 10);
-	Graph2.SetPadding(22, 5, 10, 10);
-	Graph3.SetPadding(22, 5, 10, 10);
-	Graph4.SetPadding(22, 5, 10, 10);
+	Graph1.SetPadding(12, 5, 10, 10);
+	Graph2.SetPadding(12, 5, 10, 10);
+	Graph3.SetPadding(12, 5, 10, 10);
+	Graph4.SetPadding(12, 5, 10, 10);
 	Graph1.SetTitle(L"Полная эенергия (Е)");
 	Graph2.SetTitle(L"Кинетическая эенергия (Еk)");
 	Graph3.SetTitle(L"Потенциальная эенергия (Еп)");
+	Graph4.SetTitle(L"Парная корреляционная функция g(r)");
 	ShowWindow(SW_SHOW);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// Исключение: страница свойств OCX должна возвращать значение FALSE

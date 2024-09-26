@@ -47,9 +47,12 @@ public:
 	bool InProcess = false;
 	int rdrw = 0;
 	void UpdateString();
+	void CreateGraphs();
 protected:
 	afx_msg LRESULT OnGraphClosed(WPARAM wParam, LPARAM lParam);
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CButton OkButton;
+	afx_msg void OnStnClickedParamsText();
+	afx_msg void OnBnClickedButtonGraphics();
 };

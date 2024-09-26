@@ -6,11 +6,12 @@
 
 void Verlet::CreateStartPosition()
 {
+	srand(time(NULL));
 	double x = 0;
 	double y = 0;
 	int cap = RAND_MAX * vacancy;
 	int N = L;
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csdata);
 	for (int i = 0; i < N; i++)
 	{
 		for (int j = 0; j < N; j++)
@@ -22,13 +23,7 @@ void Verlet::CreateStartPosition()
 			V.push_back(point(0, 0));
 		}
 	}
-	/*data.push_back(point(10 * a, 10 * a));
-	data.push_back(point(11 * a, 11 * a));
-	data.push_back(point(10 * a, 11 * a));
-	V.push_back(point(0, 0));
-	V.push_back(point(0, 0));
-	V.push_back(point(0, 0));*/
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csdata);
 	ActualVacancy = (double)data.size() / (double)N / (double)N;
 }
 
@@ -40,6 +35,12 @@ UINT64 Verlet::GetIterations()
 double Verlet::GetActualTime()
 {
 	return IterationCounter * dt;
+}
+
+void Verlet::SetDr(double val)
+{
+	dr = val;
+	dra = dr * a;
 }
 
 inline double Verlet::rand(double left, double right)
@@ -56,13 +57,15 @@ inline double Verlet::range2(point& p1, point& p2)
 void Verlet::gradU()
 {
 	int size = data.size();
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csFx);
+	EnterCriticalSection(&csFy);
 	for (int i = 0; i < size; i++)
 	{
 		Fx[i] = 0;
 		Fy[i] = 0;
 	}
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csFx);
+	LeaveCriticalSection(&csFy);
 
 	double r2 = 0;
 	double r1 = 0;
@@ -82,10 +85,10 @@ void Verlet::gradU()
 	{
 		for (int j = i + 1; j < size; j++)
 		{
-			EnterCriticalSection(&cs);
+			EnterCriticalSection(&csdata);
 			p1 = data[i];
 			p2 = data[j];
-			LeaveCriticalSection(&cs);
+			LeaveCriticalSection(&csdata);
 
 			dx = p1.first - p2.first;
 			dy = p1.second - p2.second;
@@ -112,24 +115,28 @@ void Verlet::gradU()
 
 			f = (a6 / r6 - 1) / r8 * k;
 			
-			EnterCriticalSection(&cs);
+			EnterCriticalSection(&csFx);
 			Fx[i] += f * dx;
-			Fy[i] += f * dy;
-
 			Fx[j] -= f * dx;
+			LeaveCriticalSection(&csFx);
+
+			EnterCriticalSection(&csFy);
+			Fy[i] += f * dy;
 			Fy[j] -= f * dy;
-			LeaveCriticalSection(&cs);
+			LeaveCriticalSection(&csFy);
 		}
 	}
 
 	double D12 = D * 12 * a6;
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csFx);
+	EnterCriticalSection(&csFy);
 	for (int i = 0; i < size; i++)
 	{
 		Fx[i] *= D12;
 		Fy[i] *= D12;
 	}
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csFx);
+	LeaveCriticalSection(&csFy);
 }
 
 inline void Verlet::Separate(double& dx, double& dy)
@@ -141,17 +148,18 @@ inline void Verlet::Separate(double& dx, double& dy)
 void Verlet::CalcEk()
 {
 	double ek = 0;
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csEk);
 	for (auto& v : V)
 	{
 		ek += m * (pow2(v.first) + pow2(v.second)) / 2.;
 	}
 	Ek.push_back(ek * 6.241506363094e+18);
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csEk);
 }
 
 void Verlet::CalcEp()
 {
+	std::vector<double>tempg(g.size(), 0);
 	int size = data.size();
 
 	double r2 = 0;
@@ -161,7 +169,7 @@ void Verlet::CalcEp()
 	double rmax = 1.75 * a;
 	double rmin = 1.15 * a;
 	double rdif = rmin - rmax;
-	double k = 0;
+	double k = 1;
 	point p1;
 	point p2;
 	double dx = 0;
@@ -172,14 +180,19 @@ void Verlet::CalcEp()
 	double sigma12 = pow2(sigma6);
 	double ep = 0;
 
+	double L4 = La / 4;
+	double L34 = La * 3;
+	double a75 = a * 7.5;
+	int id = 0;
+
 	for (int i = 0; i < size; i++)
 	{
 		for (int j = i + 1; j < size; j++)
 		{
-			EnterCriticalSection(&cs);
+			EnterCriticalSection(&csdata);
 			p1 = data[i];
 			p2 = data[j];
-			LeaveCriticalSection(&cs);
+			LeaveCriticalSection(&csdata);
 
 			dx = p1.first - p2.first;
 			dy = p1.second - p2.second;
@@ -187,6 +200,15 @@ void Verlet::CalcEp()
 
 			r2 = pow2(dx) + pow2(dy);
 			r1 = sqrt(r2);
+
+			if (r1 <= a75)
+			{
+				if ((p1.first > L4) && (p1.first < L34) && (p1.second > L4) && (p1.second < L34))
+				{
+					id = r1 / dra;
+					tempg[id] += 2. / (id + 1) / dr;
+				}
+			}
 
 			if (r1 >= rmax)continue;
 			if (r1 >= rmin)
@@ -209,12 +231,15 @@ void Verlet::CalcEp()
 			ep += f;
 		}
 	}
-
-	double D8 = D * 8;
-	ep *= D8;
-	EnterCriticalSection(&cs);
+	double D4 = D * 4;
+	ep *= D4;
+	EnterCriticalSection(&csEp);
 	Ep.push_back(ep * 6.241506363094e+18);
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csEp);
+
+	EnterCriticalSection(&csg);
+	g = tempg;
+	LeaveCriticalSection(&csg);
 }
 
 void Verlet::CalcE()
@@ -224,16 +249,92 @@ void Verlet::CalcE()
 	E.push_back(Ek.back() + Ep.back());
 }
 
+void Verlet::CalcG()
+{
+	EnterCriticalSection(&csg);
+	for (int i = 0; i < g.size(); i++)
+	{
+		g[i] = 0;
+	}
+	LeaveCriticalSection(&csg);
+
+	double L4 = La / 4;
+	double L34 = La * 3;
+	double a75 = a * 7.5;
+
+	int size = data.size();
+	point p1;
+	point p2;
+	double dx = 0;
+	double dy = 0;
+	double r2 = 0;
+	double r1 = 0;
+	int id = 0;
+	int counter = 0;
+
+	for (int i = 0; i < size; i++)
+	{
+		EnterCriticalSection(&csdata);
+		p1 = data[i];
+		LeaveCriticalSection(&csdata);
+
+		if (p1.first < L4)continue;
+		if (p1.first > L34)continue;
+		if (p1.second < L4)continue;
+		if (p1.second > L34)continue;
+		for (int j = i + 1; j < size; j++)
+		{
+			EnterCriticalSection(&csdata);
+			p2 = data[j];
+			LeaveCriticalSection(&csdata);
+			
+			dx = p1.first - p2.first;
+			dy = p1.second - p2.second;
+			Separate(dx, dy);
+
+			r2 = pow2(dx) + pow2(dy);
+			r1 = sqrt(r2);
+			
+			if (r1 > a75)continue;
+
+			id = r1 / dra;
+			EnterCriticalSection(&csg);
+			g[id] += 2. / (id + 1) / dr;
+			LeaveCriticalSection(&csg);
+			counter++;
+		}
+	}
+
+	/*EnterCriticalSection(&csg);
+	for (int i = 0; i < g.size(); i++)
+	{
+		g[i] /= (double)(i + 1) / dr;
+	}
+	LeaveCriticalSection(&csg);*/
+}
+
 Verlet::Verlet()
 {
 	a6 = a * a * a * a * a * a;
-	InitializeCriticalSection(&cs);
-
+	InitializeCriticalSection(&csFx);
+	InitializeCriticalSection(&csFy);
+	InitializeCriticalSection(&csE);
+	InitializeCriticalSection(&csEk);
+	InitializeCriticalSection(&csEp);
+	InitializeCriticalSection(&csg);
+	InitializeCriticalSection(&csdata);
+	Pi2 = 8 * atan(1);
 }
 
 Verlet::~Verlet()
 {
-	DeleteCriticalSection(&cs);
+	DeleteCriticalSection(&csFx);
+	DeleteCriticalSection(&csFy);
+	DeleteCriticalSection(&csE);
+	DeleteCriticalSection(&csEk);
+	DeleteCriticalSection(&csEp);
+	DeleteCriticalSection(&csg);
+	DeleteCriticalSection(&csdata);
 }
 
 void Verlet::main()
@@ -241,6 +342,7 @@ void Verlet::main()
 	IterationCounter = 0;
 	Continue = true;
 
+	g.resize(a * 7.5 / dra);
 	Fx.resize(data.size());
 	Fy.resize(data.size());
 
@@ -250,6 +352,7 @@ void Verlet::main()
 	{
 		VerletStep();
 		CalcE();
+		//CalcG();
 	}
 }
 
@@ -276,9 +379,9 @@ void Verlet::SetDt(double val)
 
 std::vector<point> Verlet::GetData()
 {
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csdata);
 	auto temp = data;
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csdata);
 	return temp;
 }
 
@@ -321,25 +424,33 @@ void Verlet::VerletStep()
 
 std::vector<double> Verlet::GetE()
 {
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csE);
 	auto temp = E;
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csE);
 	return temp;
 }
 
 std::vector<double> Verlet::GetEk()
 {
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csEk);
 	auto temp = Ek;
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csEk);
 	return temp;
 }
 
 std::vector<double> Verlet::GetEp()
 {
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csEp);
 	auto temp = Ep;
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csEp);
+	return temp;
+}
+
+std::vector<double> Verlet::GetG()
+{
+	EnterCriticalSection(&csg);
+	auto temp = g;
+	LeaveCriticalSection(&csg);
 	return temp;
 }
 
