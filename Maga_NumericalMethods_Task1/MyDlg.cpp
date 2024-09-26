@@ -182,7 +182,7 @@ void MyDlg::OnBnClickedOk()
 		graphs.push_back(dlg);
 		GraphsAvailible = true;
 
-		ver = new Verlet;
+		ver = new Verlet();
 		ver->SetC(pardlg.shift);
 		ver->SetL(pardlg.L);
 		ver->SetVacancy(pardlg.vacancy);
@@ -190,23 +190,24 @@ void MyDlg::OnBnClickedOk()
 		ver->CreateStartPosition();
 
 		double a = ver->GetA();
-		ModelPicture.SetRange(PointF(0, 0), PointF((pardlg.L - 1) * a, (pardlg.L - 1) * a));
+		ModelPicture.SetRange(PointF(0, 0), PointF((pardlg.L) * a, (pardlg.L) * a));
 		ModelPicture.SetPadding(10, 5, 10, 10);
 		ModelPicture.SetTitle(L"Модель");
-		ModelPicture.SetGridLinesAmount(pardlg.L);
+		ModelPicture.SetGridLinesAmount(pardlg.L + 1);
 		ModelPicture.SetMarksScaler(1. / a);
 		ModelPicture.SetData(ver->GetData());
 		ModelPicture.Invalidate();
 
 
-		CString actstr;
+		/*CString actstr;
 		ParamsText.GetWindowTextW(actstr);
 		CString str;
 		if (actstr.IsEmpty())str.Format(L"Вакансии (эксп.): %.2f", ver->GetActualVacancy());
 		else str.Format(L", Вакансии (эксп.): %.2f", ver->GetActualVacancy());
-		ParamsText.SetWindowTextW(actstr + str);
+		ParamsText.SetWindowTextW(actstr + str);*/
+		UpdateString();
 
-		timerid = SetTimer(123, 100, NULL);
+		timerid = SetTimer(123, 16, NULL);
 
 		OkButton.SetWindowTextW(L"Стоп");
 		InProcess = true;
@@ -221,11 +222,12 @@ void MyDlg::OnBnClickedButtonParams()
 	// TODO: добавьте свой код обработчика уведомлений
 	if (pardlg.DoModal() != IDOK)return;
 	CString str;
-	if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f, T0: %.f",
+	/*if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f, T0: %.f",
 		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0, pardlg.T);
 	else str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f",
 		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0);
-	ParamsText.SetWindowTextW(str);
+	ParamsText.SetWindowTextW(str);*/
+	UpdateString();
 }
 
 DWORD __stdcall MyDlg::ModelThread(LPVOID p)
@@ -243,6 +245,29 @@ afx_msg LRESULT CAboutDlg::OnMsMyCreate(WPARAM wParam, LPARAM lParam)
 }
 
 
+void MyDlg::UpdateString()
+{
+	CString str;
+	if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f, T0: %.f",
+		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0, pardlg.T);
+	else str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f",
+		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0);
+
+	if(InProcess)
+	{
+		CString substr;
+		substr.Format(L", Вакансии (эксп.): %.2f", ver->GetActualVacancy());
+		str += substr;
+
+		substr.Format(L", Итерации: %d", (int)ver->GetIterations());
+		str += substr;
+
+		substr.Format(L", Время: %.3f", ver->GetActualTime());
+		str += substr;
+	}
+
+	ParamsText.SetWindowTextW(str);
+}
 afx_msg LRESULT MyDlg::OnGraphClosed(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == graphs.size() - 1);
@@ -256,14 +281,20 @@ void MyDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO: добавьте свой код обработчика сообщений или вызов стандартного
 	if (GraphsAvailible)
 	{
-		graphs.back()->Graph1.SetData(ver->GetE());
-		graphs.back()->Graph2.SetData(ver->GetEk());
-		graphs.back()->Graph3.SetData(ver->GetEp());
-		
-		//graphs.back()->Invalidate();
-		graphs.back()->InvalidateGraphs();
+		if(rdrw%35 == 0)
+		{
+			graphs.back()->Graph1.SetData(ver->GetE());
+			graphs.back()->Graph2.SetData(ver->GetEk());
+			graphs.back()->Graph3.SetData(ver->GetEp());
+
+			//graphs.back()->Invalidate();
+			graphs.back()->InvalidateGraphs();
+			rdrw = 0;
+			UpdateString();
+		}
 	}
 	ModelPicture.SetData(ver->GetData());
 	ModelPicture.Invalidate();
+	rdrw++;
 	CDialogEx::OnTimer(nIDEvent);
 }

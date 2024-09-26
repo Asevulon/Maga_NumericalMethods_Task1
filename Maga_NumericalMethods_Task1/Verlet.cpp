@@ -2,6 +2,8 @@
 #include "Verlet.h"
 
 #define pow2(x) (x) * (x)
+
+
 void Verlet::CreateStartPosition()
 {
 	double x = 0;
@@ -9,7 +11,7 @@ void Verlet::CreateStartPosition()
 	int cap = RAND_MAX * vacancy;
 	int N = L;
 	EnterCriticalSection(&cs);
-	/*for (int i = 0; i < N; i++)
+	for (int i = 0; i < N; i++)
 	{
 		for (int j = 0; j < N; j++)
 		{
@@ -19,15 +21,25 @@ void Verlet::CreateStartPosition()
 			data.push_back(point(x, y));
 			V.push_back(point(0, 0));
 		}
-	}*/
-	data.push_back(point(10 * a, 10 * a));
+	}
+	/*data.push_back(point(10 * a, 10 * a));
 	data.push_back(point(11 * a, 11 * a));
 	data.push_back(point(10 * a, 11 * a));
 	V.push_back(point(0, 0));
 	V.push_back(point(0, 0));
-	V.push_back(point(0, 0));
+	V.push_back(point(0, 0));*/
 	LeaveCriticalSection(&cs);
 	ActualVacancy = (double)data.size() / (double)N / (double)N;
+}
+
+UINT64 Verlet::GetIterations()
+{
+	return IterationCounter;
+}
+
+double Verlet::GetActualTime()
+{
+	return IterationCounter * dt;
 }
 
 inline double Verlet::rand(double left, double right)
@@ -110,7 +122,7 @@ void Verlet::gradU()
 		}
 	}
 
-	double D12 = -D * 12 * a6;
+	double D12 = D * 12 * a6;
 	EnterCriticalSection(&cs);
 	for (int i = 0; i < size; i++)
 	{
@@ -215,11 +227,17 @@ void Verlet::CalcE()
 Verlet::Verlet()
 {
 	a6 = a * a * a * a * a * a;
+	InitializeCriticalSection(&cs);
+
+}
+
+Verlet::~Verlet()
+{
+	DeleteCriticalSection(&cs);
 }
 
 void Verlet::main()
 {
-	InitializeCriticalSection(&cs);
 	IterationCounter = 0;
 	Continue = true;
 
@@ -233,7 +251,6 @@ void Verlet::main()
 		VerletStep();
 		CalcE();
 	}
-	DeleteCriticalSection(&cs);
 }
 
 void Verlet::SetC(double val)

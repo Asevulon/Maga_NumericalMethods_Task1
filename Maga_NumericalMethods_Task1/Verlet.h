@@ -33,8 +33,8 @@ private:
 	UINT64 IterationCounter = 0;
 
 	bool Continue = true;
-
 	CRITICAL_SECTION cs;
+
 protected:
 	inline double rand(double left, double right);
 	inline double range2(point& p1, point& p2);
@@ -45,6 +45,7 @@ protected:
 	void CalcE();
 public:
 	Verlet();
+	~Verlet();
 	void main();
 	void SetC(double val);
 	void SetL(double val);
@@ -59,6 +60,8 @@ public:
 	std::vector<double> GetEp();
 	void Stop();
 	void CreateStartPosition();
+	UINT64 GetIterations();
+	double GetActualTime();
 };
 
 template <typename T> int sgn(T val);

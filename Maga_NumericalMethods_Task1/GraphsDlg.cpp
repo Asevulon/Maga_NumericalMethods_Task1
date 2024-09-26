@@ -65,7 +65,9 @@ BOOL GraphsDlg::OnInitDialog()
 	Graph2.SetPadding(22, 5, 10, 10);
 	Graph3.SetPadding(22, 5, 10, 10);
 	Graph4.SetPadding(22, 5, 10, 10);
-
+	Graph1.SetTitle(L"Полная эенергия (Е)");
+	Graph2.SetTitle(L"Кинетическая эенергия (Еk)");
+	Graph3.SetTitle(L"Потенциальная эенергия (Еп)");
 	ShowWindow(SW_SHOW);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// Исключение: страница свойств OCX должна возвращать значение FALSE

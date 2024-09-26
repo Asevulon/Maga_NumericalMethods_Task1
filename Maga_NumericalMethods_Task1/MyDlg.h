@@ -40,11 +40,13 @@ public:
 	CStatic ParamsText;
 	std::vector<GraphsDlg*>graphs;
 	ModelDrawer ModelPicture;
-	Verlet* ver;
+	Verlet* ver = nullptr;
 	static DWORD WINAPI ModelThread(LPVOID);
 	bool GraphsAvailible = false;
 	UINT_PTR timerid;
 	bool InProcess = false;
+	int rdrw = 0;
+	void UpdateString();
 protected:
 	afx_msg LRESULT OnGraphClosed(WPARAM wParam, LPARAM lParam);
 public:
