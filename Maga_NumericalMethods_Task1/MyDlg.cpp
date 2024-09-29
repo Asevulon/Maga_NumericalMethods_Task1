@@ -185,7 +185,12 @@ void MyDlg::OnBnClickedOk()
 		ver->SetVacancy(pardlg.vacancy);
 		ver->SetDt(pardlg.dt);
 		ver->SetDr(pardlg.dr);
+		ver->SetT(pardlg.T);
+		ver->SetV0(pardlg.V0);
+		ver->SetV0Shift(pardlg.V0Shift);
+		ver->SetTemperatureMaintenance(pardlg.Tmaintenance);
 		ver->CreateStartPosition();
+		ver->CreateStartSpeed();
 
 		double a = ver->GetA();
 		ModelPicture.SetRange(PointF(0, 0), PointF((pardlg.L) * a, (pardlg.L) * a));
@@ -196,13 +201,8 @@ void MyDlg::OnBnClickedOk()
 		ModelPicture.SetData(ver->GetData());
 		ModelPicture.Invalidate();
 
+		graphs.back()->Graph4.SetKeys(ver->GetGKeys());
 
-		/*CString actstr;
-		ParamsText.GetWindowTextW(actstr);
-		CString str;
-		if (actstr.IsEmpty())str.Format(L"Вакансии (эксп.): %.2f", ver->GetActualVacancy());
-		else str.Format(L", Вакансии (эксп.): %.2f", ver->GetActualVacancy());
-		ParamsText.SetWindowTextW(actstr + str);*/
 		UpdateString();
 
 		timerid = SetTimer(123, 32, NULL);
@@ -219,12 +219,6 @@ void MyDlg::OnBnClickedButtonParams()
 {
 	// TODO: добавьте свой код обработчика уведомлений
 	if (pardlg.DoModal() != IDOK)return;
-	CString str;
-	/*if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f, T0: %.f",
-		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0, pardlg.T);
-	else str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f",
-		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0);
-	ParamsText.SetWindowTextW(str);*/
 	UpdateString();
 }
 
@@ -246,9 +240,9 @@ afx_msg LRESULT CAboutDlg::OnMsMyCreate(WPARAM wParam, LPARAM lParam)
 void MyDlg::UpdateString()
 {
 	CString str;
-	if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f, T0: %.f",
+	if (pardlg.Tmaintenance)str.Format(L"L:%.f, dt: %.4f, dr: %.3f, Вакансии: %.2f, Сдвиг: %.2f, V0: %.2f, T0: %.f",
 		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0, pardlg.T);
-	else str.Format(L"L:%.f, dt: %.f, dr: %.f, Вакансии: %.f, Сдвиг: %.f, V0: %.f",
+	else str.Format(L"L:%.f, dt: %.4f, dr: %.3f, Вакансии: %.2f, Сдвиг: %.2f, V0: %.2f",
 		pardlg.L, pardlg.dt, pardlg.dr, pardlg.vacancy, pardlg.shift, pardlg.V0);
 
 	if(InProcess)
@@ -260,7 +254,7 @@ void MyDlg::UpdateString()
 		substr.Format(L", Итерации: %d", (int)ver->GetIterations());
 		str += substr;
 
-		substr.Format(L", Время: %.3f", ver->GetActualTime());
+		substr.Format(L", Температура: %.f", ver->GetCurrentTemperature());
 		str += substr;
 	}
 

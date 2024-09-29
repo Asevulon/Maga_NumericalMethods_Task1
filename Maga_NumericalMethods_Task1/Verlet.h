@@ -17,11 +17,15 @@ private:
 	std::vector<double> Ep;
 	std::vector<double> E;
 	std::vector<double> g;
+	std::vector<double> E100;
+	std::vector<double> Ek100;
+	std::vector<double> Ep100;
 
 	const double a = 3.82e-10;
 	const double D = 1.6502426499e-21;
 	const double m = 6.63352599096e-26;
 	const double tau = 2e-12;
+	const double kb = 1.380649e-23;
 	double Pi2 = 0;
 	double a6 = 0;
 
@@ -32,9 +36,21 @@ private:
 	double dt = 0;
 	double dr = 0;
 	double dra = 0;
+	double T = 0;
+	double V0level = 0;
+	double V0shift = 0;
+	bool TMaintenance = false;
 
 	double ActualVacancy = 0;
 	UINT64 IterationCounter = 0;
+	double CurrentTemperature = 0;
+
+	int TPushE = 100;
+	int TPushECounter = 0;
+
+	int TemperatureMaintetancePeriod = 10;
+	int TemperatureMaintetanceCounter = 0;
+	double TemperatureMaintenaceAvg = 0;
 
 	bool Continue = true;
 	CRITICAL_SECTION csFx;
@@ -44,6 +60,7 @@ private:
 	CRITICAL_SECTION csEp;
 	CRITICAL_SECTION csg;
 	CRITICAL_SECTION csdata;
+	CRITICAL_SECTION csCurT;
 
 protected:
 	inline double rand(double left, double right);
@@ -54,6 +71,7 @@ protected:
 	void CalcEp();
 	void CalcE();
 	void CalcG();
+	void MaintenanceTemperature();
 public:
 	Verlet();
 	~Verlet();
@@ -72,9 +90,16 @@ public:
 	std::vector<double> GetG();
 	void Stop();
 	void CreateStartPosition();
+	void CreateStartSpeed();
 	UINT64 GetIterations();
 	double GetActualTime();
 	void SetDr(double val);
+	std::vector<double> GetGKeys();
+	void SetT(double val);
+	void SetV0(double val);
+	void SetV0Shift(double val);
+	double GetCurrentTemperature();
+	void SetTemperatureMaintenance(bool val);
 };
 
 template <typename T> int sgn(T val);

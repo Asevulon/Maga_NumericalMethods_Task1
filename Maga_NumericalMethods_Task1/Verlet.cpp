@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Verlet.h"
 
-#define pow2(x) (x) * (x)
+#define pow2(x) ((x) * (x))
 
 
 void Verlet::CreateStartPosition()
@@ -20,11 +20,53 @@ void Verlet::CreateStartPosition()
 			x = j * a + c * rand(-1, 1);
 			y = i * a + c * rand(-1, 1);
 			data.push_back(point(x, y));
-			V.push_back(point(0, 0));
 		}
 	}
 	LeaveCriticalSection(&csdata);
 	ActualVacancy = (double)data.size() / (double)N / (double)N;
+}
+
+void Verlet::CreateStartSpeed()
+{
+	if (data.empty())return;
+
+	srand(time(NULL));
+	double x = 0;
+	double y = 0;
+	int N = data.size();
+	V.resize(N);
+	double Vmax = sqrt(3 * kb * T / m) * V0level;
+	double Vmin = (1 - V0shift) * Vmax;
+	Vmax *= 1 + V0shift;
+
+	double v = 0;
+	double fi = 0;
+
+	double xavg = 0;
+	double yavg = 0;
+
+	for (int i = 0; i < N; i++)
+	{
+		v = rand(Vmin, Vmax);
+		fi = rand(0, Pi2);
+
+		x = v * cos(fi);
+		y = v * sin(fi);
+
+		xavg += x;
+		yavg += y;
+
+		V[i] = point(x, y);
+	}
+
+	xavg /= N;
+	yavg /= N;
+
+	for (int i = 0; i < N; i++)
+	{
+		V[i].first -= xavg;
+		V[i].second -= yavg;
+	}
 }
 
 UINT64 Verlet::GetIterations()
@@ -41,6 +83,44 @@ void Verlet::SetDr(double val)
 {
 	dr = val;
 	dra = dr * a;
+}
+
+std::vector<double> Verlet::GetGKeys()
+{
+	std::vector<double> res(a * 7.5 / dra, 0);
+	for (int i = 0; i < res.size(); i++)
+	{
+		res[i] = double(i + 1) * dr;
+	}
+	return res;
+}
+
+void Verlet::SetT(double val)
+{
+	T = val;
+}
+
+void Verlet::SetV0(double val)
+{
+	V0level = val;
+}
+
+void Verlet::SetV0Shift(double val)
+{
+	V0shift = val;
+}
+
+double Verlet::GetCurrentTemperature()
+{
+	EnterCriticalSection(&csCurT);
+	double temp = CurrentTemperature;
+	LeaveCriticalSection(&csCurT);
+	return temp;
+}
+
+void Verlet::SetTemperatureMaintenance(bool val)
+{
+	TMaintenance = val;
 }
 
 inline double Verlet::rand(double left, double right)
@@ -148,13 +228,22 @@ inline void Verlet::Separate(double& dx, double& dy)
 void Verlet::CalcEk()
 {
 	double ek = 0;
-	EnterCriticalSection(&csEk);
 	for (auto& v : V)
 	{
 		ek += m * (pow2(v.first) + pow2(v.second)) / 2.;
 	}
-	Ek.push_back(ek * 6.241506363094e+18);
-	LeaveCriticalSection(&csEk);
+	Ek100.push_back(ek);
+	if(Ek100.size() == TPushE)
+	{
+		double avg = 0;
+		for (auto& item : Ek100)avg += item;
+		EnterCriticalSection(&csEk);
+		Ek.push_back(avg * 6.241506363094e+18 / TPushE);
+		LeaveCriticalSection(&csEk);
+	}
+	EnterCriticalSection(&csCurT);
+	CurrentTemperature = ek / V.size() / kb;
+	LeaveCriticalSection(&csCurT);
 }
 
 void Verlet::CalcEp()
@@ -233,9 +322,16 @@ void Verlet::CalcEp()
 	}
 	double D4 = D * 4;
 	ep *= D4;
-	EnterCriticalSection(&csEp);
-	Ep.push_back(ep * 6.241506363094e+18);
-	LeaveCriticalSection(&csEp);
+
+	Ep100.push_back(ep);
+	if(Ep100.size() == TPushE)
+	{
+		double avg = 0;
+		for (auto& item : Ep100)avg += item;
+		EnterCriticalSection(&csEp);
+		Ep.push_back(avg * 6.241506363094e+18 / TPushE);
+		LeaveCriticalSection(&csEp);
+	}
 
 	EnterCriticalSection(&csg);
 	g = tempg;
@@ -246,7 +342,13 @@ void Verlet::CalcE()
 {
 	CalcEk();
 	CalcEp();
-	E.push_back(Ek.back() + Ep.back());
+	if ((Ek100.size() == TPushE) || (Ep100.size() == TPushE))
+	{
+		E.push_back(Ek.back() + Ep.back());
+		Ek100.clear();
+		Ep100.clear();
+		return;
+	}
 }
 
 void Verlet::CalcG()
@@ -313,6 +415,33 @@ void Verlet::CalcG()
 	LeaveCriticalSection(&csg);*/
 }
 
+void Verlet::MaintenanceTemperature()
+{
+	for (int i = 0; i < V.size(); i++)
+	{
+		TemperatureMaintenaceAvg += pow2(V[i].first) + pow2(V[i].second);
+	}
+	TemperatureMaintetanceCounter++;
+
+	if (TemperatureMaintetanceCounter < TemperatureMaintetancePeriod)
+	{
+		return;
+	}
+
+	TemperatureMaintenaceAvg *= m / 10.;
+	
+	double betta = sqrt(2 * V.size() * kb * T / TemperatureMaintenaceAvg);
+
+	for (int i = 0; i < V.size(); i++)
+	{
+		V[i].first *= betta;
+		V[i].second *= betta;
+	}
+
+	TemperatureMaintenaceAvg = 0;
+	TemperatureMaintetanceCounter = 0;
+}
+
 Verlet::Verlet()
 {
 	a6 = a * a * a * a * a * a;
@@ -323,6 +452,7 @@ Verlet::Verlet()
 	InitializeCriticalSection(&csEp);
 	InitializeCriticalSection(&csg);
 	InitializeCriticalSection(&csdata);
+	InitializeCriticalSection(&csCurT);
 	Pi2 = 8 * atan(1);
 }
 
@@ -335,24 +465,25 @@ Verlet::~Verlet()
 	DeleteCriticalSection(&csEp);
 	DeleteCriticalSection(&csg);
 	DeleteCriticalSection(&csdata);
+	DeleteCriticalSection(&csCurT);
 }
 
 void Verlet::main()
 {
 	IterationCounter = 0;
 	Continue = true;
+	TPushECounter = 0;
 
 	g.resize(a * 7.5 / dra);
 	Fx.resize(data.size());
 	Fy.resize(data.size());
-
 	gradU();
 
 	while (Continue)
 	{
 		VerletStep();
 		CalcE();
-		//CalcG();
+		if (TMaintenance)MaintenanceTemperature();
 	}
 }
 

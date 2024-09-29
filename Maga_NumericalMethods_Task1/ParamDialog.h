@@ -34,4 +34,5 @@ public:
 	CButton Toff;
 	afx_msg void OnBnClickedOk();
 	virtual BOOL OnInitDialog();
+	double V0Shift;
 };

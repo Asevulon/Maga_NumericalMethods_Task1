@@ -18,8 +18,9 @@ ParamDialog::ParamDialog(CWnd* pParent /*=nullptr*/)
 	, vacancy(0.2)
 	, shift(0.05)
 	, dr(0.1)
-	, V0(0)
+	, V0(0.1)
 	, T(300)
+	, V0Shift(0.1)
 {
 
 }
@@ -40,6 +41,7 @@ void ParamDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT6, T);
 	DDX_Control(pDX, IDC_RADIO1, Ton);
 	DDX_Control(pDX, IDC_RADIO2, Toff);
+	DDX_Text(pDX, IDC_EDIT8, V0Shift);
 }
 
 

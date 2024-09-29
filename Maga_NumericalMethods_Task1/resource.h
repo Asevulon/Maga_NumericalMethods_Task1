@@ -22,8 +22,8 @@
 #define IDC_EDIT7                       1009
 #define IDC_MODEL_PICTURE               1009
 #define IDC_GRAPH1                      1010
+#define IDC_EDIT8                       1010
 #define IDC_GRAPH2                      1011
-#define IDC_BUTTON1                     1011
 #define IDC_BUTTON_GRAPHICS             1011
 #define IDC_GRAPH3                      1012
 #define IDC_GRAPH4                      1013

@@ -13,8 +13,8 @@ ModelDrawer::ModelDrawer()
 {
 	GdiplusStartupInput si;
 	GdiplusStartup(&token, &si, NULL);
-	radius.X = 7.1e-11;
-	radius.Y = 7.1e-11;
+	radius.X = 3.82e-10 / 2.;
+	radius.Y = 3.82e-10 / 2.;
 }
 
 ModelDrawer::~ModelDrawer()
@@ -148,11 +148,22 @@ void ModelDrawer::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	}
 
 
+	p1.X = left;
+	p1.Y = top;
+	matr.TransformPoints(&p1);
+	p2.X = right;
+	p2.Y = bot;
+	matr.TransformPoints(&p2);
+	RectF clip(p1.X, p1.Y, p2.X - p1.X, p2.Y - p1.Y);
+	gr.SetClip(clip);
 
 	SolidBrush DataBrush(Color(200, 100, 0));
 
 	double twidth = 0;
 	double theight = 0;
+	double xlen = right - left;
+	double ylen = top - bot;
+	bool drawcopy = false;
 	for (auto&point:data)
 	{
 		p1 = p2 = point;
@@ -164,7 +175,8 @@ void ModelDrawer::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		theight = p2.Y - p1.Y;
 		gr.FillEllipse(&DataBrush, p1.X, p1.Y, twidth, theight);
 	}
-	
+	gr.ResetClip();
+
 	ToWindow.DrawImage(&bmp, 0, 0);
 }
 
